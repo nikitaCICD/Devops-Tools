@@ -1,0 +1,41 @@
+---
+ - hosts: all
+   vars:
+           #openssl passwd -salt yoyo -1 1234
+           password: $1$yoyo$3iJUx/X5dSGqowLEjnKHx0
+           User: Developer
+   remote_user: ubuntu
+   become: true
+
+   tasks:
+    - name: add group
+      group:
+              name: mying
+              state: present
+    - name: add user . i have used opensssl to generate hash password # openssl passwd -salt yoyo -1 1234
+      user:
+              name: "{{User}}"
+              state: present
+              group: mying
+              password: "{{password}}"
+              append: yes
+      notify: "add tag to index"
+    - name: install apache2
+      apt: name=apache2 update_cache=yes state=latest
+    - name: enabled mod_rewrite
+      apache2_module: name=rewrite state=present
+      notify:
+              - restart apache2
+
+   handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
+    - name: add tag to index
+      lineinfile:
+              path: /var/www/html/index.html
+              regexp: 'This is the default welcome page used to test the correct'
+              line: 'User {{User}} created </p> <p> This is the default welcome page used to test the correct'
+              owner: root
+              group: root
+              mode: 0644
+      listen: "add tag to index"

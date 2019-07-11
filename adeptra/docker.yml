@@ -1,0 +1,31 @@
+---
+ - hosts: all
+   vars:
+   remote_user: ubuntu
+   become: true
+   tasks:
+     
+    - name: add curl
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      
+
+    - name: add repository
+      shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+    - name: update ubuntu
+      shell: apt-get update
+
+    - name: add policy
+      shell: apt-cache policy docker-ce
+
+    - name: install docker
+      shell: apt-get install -y docker-ce
+
+    - name: check docker status
+      shell: systemctl status docker >> /tmp/docker_status
+      
+
+    - name: cat status
+      shell: cat /tmp/docker_status
+                        
+

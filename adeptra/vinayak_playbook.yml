@@ -1,0 +1,68 @@
+---
+ - hosts: all
+   vars:
+           #openssl passwd -salt yoyo -1 1234
+           password: $1$yoyo$3iJUx/X5dSGqowLEjnKHx0
+   remote_user: ubuntu
+   become: true
+   tasks:
+    - name: add group
+      group:
+              name: mying
+              state: present
+    - name: add user . i have used opensssl to generate hash password # openssl passwd -salt yoyo -1 1234
+      user:
+              name: vinayak
+              state: present
+              group: mying
+              password: "{{password}}"
+              append: yes
+    - name: create file with test content
+      shell: echo "test" >> /tmp/test
+    - name: chnage owner and permission
+      file:
+              path: /tmp/test
+              owner: vinayak
+              group: mying
+              mode: 0644
+    - name: change directory before executing shell module command
+      shell: ls -lth >> tmp_list_files
+      args:
+              chdir: /tmp
+    - name: create directory
+      file:
+              path: /tmp/mying
+              state: directory
+              owner: vinayak
+              group: mying
+              mode: 0700
+    - name: download rediff.com
+      get_url:
+              url: http://rediffmail.com
+              mode: 0440
+              dest: /tmp/mying/rediff_data.txt
+    - name: searches for test in file and replace with test success
+      lineinfile:
+              path: /tmp/test
+              regexp: '^test'
+              line: 'test success'
+              owner: vinayak
+              group: mying
+              mode: 0644
+    - name: copy file with owner and permission
+      copy:
+              src: /tmp/test
+              dest: /tmp/line_test
+              owner: vinayak
+              group: mying
+              mode: 0644
+    - name: install apache2
+      apt: name=apache2 update_cache=yes state=latest
+    - name: enabled mod_rewrite
+      apache2_module: name=rewrite state=present
+      notify:
+              - restart apache2
+
+   handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
